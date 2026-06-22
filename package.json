@@ -1,0 +1,14 @@
+{
+  "name": "herdr-command-palette",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Herdr plugin: fuzzy workspace/directory command palette.",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

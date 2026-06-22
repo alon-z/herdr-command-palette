@@ -1,0 +1,18 @@
+id = "alonz.command-palette"
+name = "Command Palette"
+version = "0.1.0"
+min_herdr_version = "0.7.0"
+description = "Fuzzy-pick open Herdr workspaces and configured project directories. Focus existing workspaces or create one for the selected directory."
+platforms = ["macos", "linux", "windows"]
+
+[[actions]]
+id = "open"
+title = "Open command palette"
+contexts = ["workspace"]
+command = ["node", "src/open.js"]
+
+[[panes]]
+id = "palette"
+title = "Command Palette"
+placement = "overlay"
+command = ["node", "src/palette.js"]
