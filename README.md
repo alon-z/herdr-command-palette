@@ -52,6 +52,20 @@ for nested project trees; keep it small for fast palette startup.
 `sort = "priority"` blends fuzzy score with open-workspace priority and zoxide
 frequency when `zoxide` is installed. Use `"fuzzy"` for old pure fuzzy sorting.
 
+## Machine-readable project catalog
+
+The PiRemote daemon can discover the same configured directories without opening
+Herdr's palette:
+
+```bash
+node /path/to/herdr-command-palette/src/catalog.js
+```
+
+The command prints `{ "projects": [{ "id", "name", "path" }] }` to stdout.
+It resolves the plugin's config directory via `herdr plugin config-dir` and exits
+nonzero if a configured root is unavailable (never treats scan failure as an
+empty catalog). Set `HERDR_PLUGIN_CONFIG_DIR` to override this during testing.
+
 ## Check
 
 ```bash

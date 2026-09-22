@@ -2,6 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 
 export const PLUGIN_ID = "alonz.command-palette";
 
@@ -66,12 +67,13 @@ export function loadConfig() {
   };
 }
 
-export function listProjectDirs(config) {
+export function listProjectDirs(config, { strict = false } = {}) {
   const seen = new Set();
   const dirs = [];
   const visit = (dir, depth) => {
     let entries;
-    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); }
+    catch (error) { if (strict) throw error; return; }
     for (const entry of entries) {
       if (!entry.isDirectory()) continue;
       if (config.ignore.has(entry.name)) continue;
@@ -86,6 +88,19 @@ export function listProjectDirs(config) {
   };
   for (const folder of config.folders) visit(folder, 0);
   return dirs.sort((a, b) => a.path.localeCompare(b.path));
+}
+
+export function projectCatalog(config) {
+  for (const folder of config.folders) {
+    if (!fs.statSync(folder, { throwIfNoEntry: false })?.isDirectory()) {
+      throw new Error(`Project folder unavailable: ${folder}`);
+    }
+  }
+  return listProjectDirs(config, { strict: true }).map((dir) => ({
+    id: createHash("sha256").update(dir.key).digest("hex"),
+    name: labelForDir(dir.path),
+    path: dir.key,
+  }));
 }
 
 export function fuzzyScore(query, text) {

@@ -11,6 +11,7 @@ import {
   parseZoxideScores,
   pathIsSameOrInside,
   priorityForPath,
+  projectCatalog,
   workspaceRepresentsDir,
 } from "../src/lib.js";
 
@@ -39,6 +40,30 @@ test("listProjectDirs honors maxDepth and ignore list", () => {
     listProjectDirs({ folders: [root], maxDepth: 1, ignore: new Set(["node_modules"]) }).map((dir) => path.basename(dir.path)),
     ["app"],
   );
+});
+
+test("projectCatalog includes open directories, stable canonical IDs, and refuses missing roots", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "hcp-catalog-"));
+  fs.mkdirSync(path.join(root, "app"));
+  const config = { folders: [root], maxDepth: 1, ignore: new Set() };
+  const first = projectCatalog(config);
+  assert.equal(first.length, 1);
+  assert.equal(first[0].name, "app");
+  assert.equal(first[0].path, fs.realpathSync.native(path.join(root, "app")));
+  assert.deepEqual(projectCatalog(config), first);
+  assert.throws(() => projectCatalog({ ...config, folders: [path.join(root, "missing")] }), /Project folder unavailable/);
+});
+
+test("catalog rejects unreadable nested directories rather than publishing a partial snapshot", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "hcp-catalog-"));
+  const nested = path.join(root, "nested");
+  fs.mkdirSync(path.join(nested, "app"), { recursive: true });
+  fs.chmodSync(nested, 0o000);
+  try {
+    assert.throws(() => projectCatalog({ folders: [root], maxDepth: 2, ignore: new Set() }), /EACCES|EPERM/);
+  } finally {
+    fs.chmodSync(nested, 0o700);
+  }
 });
 
 // ponytail: pure ranking/dedupe checks cover zoxide integration; full Herdr API stays mocked by manual smoke tests.
